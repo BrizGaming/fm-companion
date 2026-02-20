@@ -1,10 +1,15 @@
 import { CLUBS, type Club } from "../data/clubs";
 import {
-  OBJECTIVES,
-  RULES_CORE,
-  WILDCARDS_HIGH,
+  RULES_TRANSFERS,
+  RULES_SQUAD,
+  RULES_FINANCE,
+  RULES_TACTICS,
+  OBJECTIVES_SHORT,
+  OBJECTIVES_MEDIUM,
+  OBJECTIVES_LONG,
   WILDCARDS_LOW,
   WILDCARDS_MED,
+  WILDCARDS_HIGH,
 } from "../data/rules";
 
 type Region = "any" | "europe" | "south_america";
@@ -33,24 +38,49 @@ function pickManyUnique(arr: string[], count: number): string[] {
   return out;
 }
 
+function objectivesForHorizon(h: Horizon): string[] {
+  if (h === "1_season") return OBJECTIVES_SHORT;
+  if (h === "3_seasons") return OBJECTIVES_MEDIUM;
+  return OBJECTIVES_LONG;
+}
+
 export function generateScenario(input: {
   region: Region;
   difficulty: Difficulty;
   chaos: Chaos;
   horizon: Horizon;
 }): Scenario {
-  const clubs = input.region === "any" ? CLUBS : CLUBS.filter((c) => c.region === input.region);
-
+  const clubs =
+    input.region === "any" ? CLUBS : CLUBS.filter((c) => c.region === input.region);
   const club = pickOne(clubs.length ? clubs : CLUBS);
 
-  const rulesCount = input.difficulty === "casual" ? 2 : input.difficulty === "hard" ? 3 : 4;
-  const objectivesCount = input.horizon === "1_season" ? 2 : input.horizon === "3_seasons" ? 3 : 4;
+  // Difficulty scales number of rules
+  const rulesCount =
+    input.difficulty === "casual" ? 2 : input.difficulty === "hard" ? 3 : 4;
 
-  const rules = pickManyUnique(RULES_CORE, rulesCount);
-  const objectives = pickManyUnique(OBJECTIVES, objectivesCount);
+  // Pick from multiple categories so outputs feel varied
+  const rulePool = [
+    ...RULES_TRANSFERS,
+    ...RULES_SQUAD,
+    ...RULES_FINANCE,
+    ...RULES_TACTICS,
+  ];
+
+  const rules = pickManyUnique(rulePool, rulesCount);
+
+  // Objectives scale with horizon
+  const objectivePool = objectivesForHorizon(input.horizon);
+  const objectivesCount =
+    input.horizon === "1_season" ? 2 : input.horizon === "3_seasons" ? 3 : 4;
+
+  const objectives = pickManyUnique(objectivePool, objectivesCount);
 
   const wildcardPool =
-    input.chaos === "low" ? WILDCARDS_LOW : input.chaos === "medium" ? WILDCARDS_MED : WILDCARDS_HIGH;
+    input.chaos === "low"
+      ? WILDCARDS_LOW
+      : input.chaos === "medium"
+      ? WILDCARDS_MED
+      : WILDCARDS_HIGH;
 
   const wildcard = pickOne(wildcardPool);
 
