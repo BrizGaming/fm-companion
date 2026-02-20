@@ -17,9 +17,16 @@ type Difficulty = "casual" | "hard" | "brutal";
 type Chaos = "low" | "medium" | "high";
 type Horizon = "1_season" | "3_seasons" | "dynasty";
 
+export type RuleCategory = "Transfers" | "Squad" | "Finance" | "Tactics";
+
+export type CategorisedRule = {
+  category: RuleCategory;
+  text: string;
+};
+
 export type Scenario = {
   club: Club;
-  rules: string[];
+  rules: CategorisedRule[];
   objectives: string[];
   wildcard: string;
 };
@@ -28,9 +35,9 @@ function pickOne<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function pickManyUnique(arr: string[], count: number): string[] {
+function pickManyUnique<T>(arr: T[], count: number): T[] {
   const copy = [...arr];
-  const out: string[] = [];
+  const out: T[] = [];
   while (out.length < count && copy.length > 0) {
     const idx = Math.floor(Math.random() * copy.length);
     out.push(copy.splice(idx, 1)[0]);
@@ -54,21 +61,19 @@ export function generateScenario(input: {
     input.region === "any" ? CLUBS : CLUBS.filter((c) => c.region === input.region);
   const club = pickOne(clubs.length ? clubs : CLUBS);
 
-  // Difficulty scales number of rules
   const rulesCount =
     input.difficulty === "casual" ? 2 : input.difficulty === "hard" ? 3 : 4;
 
-  // Pick from multiple categories so outputs feel varied
-  const rulePool = [
-    ...RULES_TRANSFERS,
-    ...RULES_SQUAD,
-    ...RULES_FINANCE,
-    ...RULES_TACTICS,
+  // Build a categorised pool
+  const rulePool: CategorisedRule[] = [
+    ...RULES_TRANSFERS.map((text) => ({ category: "Transfers" as const, text })),
+    ...RULES_SQUAD.map((text) => ({ category: "Squad" as const, text })),
+    ...RULES_FINANCE.map((text) => ({ category: "Finance" as const, text })),
+    ...RULES_TACTICS.map((text) => ({ category: "Tactics" as const, text })),
   ];
 
   const rules = pickManyUnique(rulePool, rulesCount);
 
-  // Objectives scale with horizon
   const objectivePool = objectivesForHorizon(input.horizon);
   const objectivesCount =
     input.horizon === "1_season" ? 2 : input.horizon === "3_seasons" ? 3 : 4;

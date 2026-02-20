@@ -29,7 +29,7 @@ export default function GeneratePage() {
     const text =
       `FM Companion Challenge\n` +
       `Club: ${scenario.club.name} (${scenario.club.league})\n\n` +
-      `Rules:\n- ${scenario.rules.join("\n- ")}\n\n` +
+      `Rules:\n- ${scenario.rules.map((r) => `${r.category}: ${r.text}`).join("\n- ")}\n\n` +
       `Objectives:\n- ${scenario.objectives.join("\n- ")}\n\n` +
       `Wildcard:\n- ${scenario.wildcard}\n`;
 
@@ -131,20 +131,43 @@ export default function GeneratePage() {
                 <h2 className="text-2xl font-bold">{scenario.club.name}</h2>
                 <p className="mt-1 text-sm text-zinc-400">{scenario.club.league}</p>
               </div>
-              <div className="text-xs text-zinc-500">
-                {region.toUpperCase()} • {difficulty.toUpperCase()} • {chaos.toUpperCase()}
-              </div>
+              <div className="flex flex-wrap gap-2 justify-end">
+                {[region, difficulty, chaos, horizon].map((t) => (
+                    <span
+                    key={t}
+                    className="rounded-full border border-zinc-800 bg-zinc-950/60 px-2 py-1 text-[11px] text-zinc-300"
+                    >
+                    {t.replace("_", " ").toUpperCase()}
+                    </span>
+                ))}
+                </div>
             </div>
 
             <div className="mt-6 grid gap-6">
               <div>
                 <h3 className="text-sm font-semibold text-zinc-200">Rules</h3>
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-zinc-300">
-                  {scenario.rules.map((r) => (
-                    <li key={r}>{r}</li>
-                  ))}
-                </ul>
-              </div>
+
+                <div className="mt-3 grid gap-3">
+                    {(["Transfers", "Squad", "Finance", "Tactics"] as const).map((cat) => {
+                    const items = scenario.rules.filter((r) => r.category === cat);
+                    if (items.length === 0) return null;
+
+                    return (
+                        <div key={cat} className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+                        <div className="flex items-center justify-between">
+                            <div className="text-xs font-semibold text-zinc-200">{cat}</div>
+                            <div className="text-[11px] text-zinc-500">{items.length} rule(s)</div>
+                        </div>
+                        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-zinc-300">
+                            {items.map((r) => (
+                            <li key={`${r.category}-${r.text}`}>{r.text}</li>
+                            ))}
+                        </ul>
+                        </div>
+                    );
+                    })}
+                </div>
+                </div>
 
               <div>
                 <h3 className="text-sm font-semibold text-zinc-200">Objectives</h3>
