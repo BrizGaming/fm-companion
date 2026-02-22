@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { generateScenario, type Scenario } from "../../lib/generator";
+import { toPng } from "html-to-image";
 
 type Region = "any" | "europe" | "south_america";
 type Difficulty = "casual" | "hard" | "brutal";
@@ -13,6 +14,28 @@ export default function GeneratePage() {
   const [difficulty, setDifficulty] = useState<Difficulty>("hard");
   const [chaos, setChaos] = useState<Chaos>("medium");
   const [horizon, setHorizon] = useState<Horizon>("3_seasons");
+  
+  const exportRef = useRef<HTMLDivElement | null>(null);
+
+  async function downloadCardPng() {
+    if (!exportRef.current) return;
+
+    const node = exportRef.current;
+
+    //Make sure webfonts are redered before capture
+    await document.fonts?.ready;
+
+    const dataUrl = await toPng(node, {
+        cacheBust: true,
+        pixelRatio: 2, // sharper export
+        backgroundColor: "#0a0a0a", //clean background for the exported image
+    });
+
+    const link = document.createElement("a");
+    link.download = `fm-companion-${scenario.club.name.replaceAll(" ", "-").toLowerCase()}-${challengeId}.png`;
+    link.href = dataUrl;
+    link.click();
+  }
 
   // We reroll by bumping a seed value (keeps the UI stable until you click Generate)
   const [seed, setSeed] = useState(0);
@@ -113,18 +136,26 @@ export default function GeneratePage() {
                 </select>
               </label>
 
-              <div className="mt-2 flex gap-3">
+              <div className="mt-2 grid grid-cols-3 gap-3">
                 <button
-                  onClick={reroll}
-                  className="flex-1 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-200 shadow-[0_0_0_2px_rgba(245,158,11,0.15)]"
+                    onClick={reroll}
+                    className="col-span-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-200 shadow-[0_0_0_2px_rgba(245,158,11,0.15)]"
                 >
-                  Generate
+                    Generate
                 </button>
+
                 <button
-                  onClick={copyToClipboard}
-                  className="rounded-lg border border-zinc-700 px-4 py-2 text-sm font-semibold hover:bg-zinc-900"
+                    onClick={copyToClipboard}
+                    className="rounded-lg border border-zinc-700 px-4 py-2 text-sm font-semibold hover:bg-zinc-900"
                 >
-                  Copy
+                    Copy
+                </button>
+
+                <button
+                    onClick={downloadCardPng}
+                    className="col-span-3 rounded-lg border border-zinc-700 bg-zinc-950/40 px-4 py-2 text-sm font-semibold hover:bg-zinc-900"
+                >
+                    Download PNG
                 </button>
               </div>
 
@@ -221,6 +252,101 @@ export default function GeneratePage() {
             </div>
           </section>
         </div>
+
+        {/* Hidden export-only card */}
+          <div className="fixed -left-[9999px] top-0">
+            <div
+                ref={exportRef}
+                className="w-[900px] rounded-2xl border border-zinc-800 bg-zinc-950 p-8 text-zinc-100"
+            >
+                {/* Header */}
+                <div className="flex items-start justify-between gap-6">
+                <div>
+                    <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/40 px-3 py-1 text-[11px] uppercase tracking-wider text-zinc-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                    FM Companion Challenge
+                    </div>
+
+                    <h2 className="mt-4 text-4xl font-bold leading-tight tracking-tight">
+                    {scenario.club.name}
+                    </h2>
+                    <p className="mt-1 text-sm text-zinc-400">{scenario.club.league}</p>
+
+                    <div className="mt-3 text-xs text-zinc-500">
+                    Challenge ID: <span className="text-zinc-300">#{challengeId}</span>
+                    </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 justify-end">
+                    {[region, difficulty, chaos, horizon].map((t) => (
+                    <span
+                        key={`export-${t}`}
+                        className="rounded-full border border-zinc-800 bg-zinc-900/40 px-2.5 py-1 text-[11px] text-zinc-300"
+                    >
+                        {t.replace("_", " ").toUpperCase()}
+                    </span>
+                    ))}
+                </div>
+                </div>
+
+                <div className="mt-6 grid gap-6">
+                {/* Rules */}
+                <div>
+                    <h3 className="text-sm font-semibold text-zinc-200">Rules</h3>
+
+                    <div className="mt-3 grid gap-3">
+                    {(["Transfers", "Squad", "Finance", "Tactics"] as const).map((cat) => {
+                        const items = scenario.rules.filter((r) => r.category === cat);
+                        if (items.length === 0) return null;
+
+                        return (
+                        <div
+                            key={`export-${cat}`}
+                            className="rounded-lg border border-zinc-800 bg-zinc-900/20 p-4"
+                        >
+                            <div className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-200">
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                            {cat}
+                            </div>
+
+                            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-zinc-300">
+                            {items.map((r) => (
+                                <li key={`export-${r.category}-${r.text}`}>{r.text}</li>
+                            ))}
+                            </ul>
+                        </div>
+                        );
+                    })}
+                    </div>
+                </div>
+
+                {/* Objectives */}
+                <div className="rounded-lg border border-zinc-800 bg-zinc-900/20 p-4">
+                    <h3 className="text-sm font-semibold text-zinc-200">Objectives</h3>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-zinc-300">
+                    {scenario.objectives.map((o) => (
+                        <li key={`export-${o}`}>{o}</li>
+                    ))}
+                    </ul>
+                </div>
+
+                {/* Wildcard */}
+                <div className="rounded-lg border border-red-900/40 bg-red-950/20 p-4">
+                    <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-zinc-200">Wildcard</h3>
+                    <span className="rounded-full border border-red-900/40 bg-red-950/30 px-2 py-1 text-[11px] text-red-200">
+                        CHAOS CLAUSE
+                    </span>
+                    </div>
+                    <p className="mt-2 text-sm text-zinc-200">{scenario.wildcard}</p>
+                </div>
+
+                <div className="text-xs text-zinc-500">
+                    Built by TheBrizGaming • fm-companion.vercel.app
+                </div>
+                </div>
+            </div>
+          </div>
 
         <footer className="mt-12 text-xs text-zinc-500">
           Built by TheBrizGaming • Not affiliated with Sports Interactive or SEGA.
