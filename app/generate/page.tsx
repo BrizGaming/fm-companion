@@ -57,7 +57,7 @@ export default function GeneratePage() {
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[360px_1fr]">
           {/* LEFT: SETTINGS */}
-          <section className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-[0_10px_30px_rgba(0,0,0,0.4)]">
             <h2 className="text-lg font-semibold">Settings</h2>
 
             <div className="mt-4 grid gap-4 text-sm">
@@ -135,7 +135,7 @@ export default function GeneratePage() {
           </section>
 
           {/* RIGHT: CHALLENGE CARD */}
-          <section className="rounded-xl border border-zinc-800 bg-gradient-to-b from-zinc-900/60 to-zinc-900/30 p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]">
+          <section className="rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900/70 to-zinc-900/30 p-7 shadow-[0_20px_40px_rgba(0,0,0,0.6)]">
             {/* Header */}
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -144,7 +144,7 @@ export default function GeneratePage() {
                   FM Companion Challenge
                 </div>
 
-                <h2 className="mt-3 text-3xl font-bold leading-tight">
+                <h2 className="mt-4 text-4xl font-bold leading-tight tracking-tight">
                   {scenario.club.name}
                 </h2>
                 <p className="mt-1 text-sm text-zinc-400">{scenario.club.league}</p>
@@ -199,7 +199,7 @@ export default function GeneratePage() {
               </div>
 
               {/* Objectives */}
-              <div>
+              <div className="rounded-lg border border-zinc-800 bg-zinc-950/30 p-4">
                 <h3 className="text-sm font-semibold text-zinc-200">Objectives</h3>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-zinc-300">
                   {scenario.objectives.map((o) => (
