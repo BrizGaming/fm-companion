@@ -27,7 +27,7 @@ export default function GeneratePage() {
 
     const dataUrl = await toPng(node, {
         cacheBust: true,
-        pixelRatio: 2, // sharper export
+        pixelRatio: 3, // sharper export
         backgroundColor: "#0a0a0a", //clean background for the exported image
     });
 
@@ -257,7 +257,7 @@ export default function GeneratePage() {
           <div className="fixed -left-[9999px] top-0">
             <div
                 ref={exportRef}
-                className="w-[900px] rounded-2xl border border-zinc-800 bg-zinc-950 p-8 text-zinc-100"
+                className="w-[1080px] rounded-2xl border border-zinc-800 bg-zinc-950 p-8 text-zinc-100"
             >
                 {/* Header */}
                 <div className="flex items-start justify-between gap-6">
@@ -267,7 +267,7 @@ export default function GeneratePage() {
                     FM Companion Challenge
                     </div>
 
-                    <h2 className="mt-4 text-4xl font-bold leading-tight tracking-tight">
+                    <h2 className="mt-5 text-4xl font-bold leading-tight tracking-tight">
                     {scenario.club.name}
                     </h2>
                     <p className="mt-1 text-sm text-zinc-400">{scenario.club.league}</p>
