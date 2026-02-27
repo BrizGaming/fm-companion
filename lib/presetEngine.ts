@@ -1,7 +1,10 @@
 import { PRESETS, type PresetId, type Difficulty } from "../data/presets";
-import { CLUBS, type Club } from "../data/clubs"; // uses your current clubs.ts list for now
+import { CLUBS, type Club } from "../data/clubs";
 
-export type CategorisedRule = { category: "Transfers" | "Squad" | "Finance" | "Tactics"; text: string };
+export type CategorisedRule = {
+  category: "Transfers" | "Squad" | "Finance" | "Tactics";
+  text: string;
+};
 
 export type PresetScenario = {
   presetId: PresetId;
@@ -21,7 +24,7 @@ function pickClubForPreset(presetId: PresetId): Club {
   if (!preset) return pickOne(CLUBS);
 
   const region = preset.clubCriteria?.region ?? "any";
-  const pool = region === "any" ? CLUBS : CLUBS.filter((c: any) => c.region === region);
+  const pool = region === "any" ? CLUBS : CLUBS.filter((c) => c.region === region);
 
   return pickOne(pool.length ? pool : CLUBS);
 }
@@ -34,10 +37,11 @@ export function generatePresetScenario(args: {
   if (!preset) throw new Error(`Unknown preset: ${args.presetId}`);
 
   const club = pickClubForPreset(args.presetId);
-
   const rules = preset.rulesByDifficulty[args.difficulty];
   const objectives = preset.objectivesByDifficulty[args.difficulty];
-  const wildcard = pickOne(preset.wildcardsByDifficulty[args.difficulty]);
+
+  const wildcardPool = preset.wildcardsByDifficulty[args.difficulty];
+  const wildcard = pickOne(wildcardPool);
 
   return {
     presetId: preset.id,

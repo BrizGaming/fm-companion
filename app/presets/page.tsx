@@ -48,7 +48,7 @@ export default function PresetsPage() {
     });
 
     const link = document.createElement("a");
-    link.download = `fm-companion-${scenario.presetId}-${challengeId}.png`;
+    link.download = `fm-companion-preset-${scenario.presetId}-${challengeId}.png`;
     link.href = dataUrl;
     link.click();
   }
@@ -62,13 +62,15 @@ export default function PresetsPage() {
           <Link href="/" className="text-xl font-semibold tracking-tight">
             FM Companion
           </Link>
-          <div className="flex items-center gap-4 text-sm text-zinc-300">
+
+          <nav className="flex items-center gap-4 text-sm text-zinc-300">
             <Link className="hover:text-white" href="/generate">
               Random Generator
             </Link>
-            <span className="text-zinc-500">•</span>
-            <span className="text-zinc-100">Preset Challenges</span>
-          </div>
+            <Link className="hover:text-white" href="/presets">
+              Preset Challenges
+            </Link>
+          </nav>
         </header>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[360px_1fr]">
@@ -131,7 +133,7 @@ export default function PresetsPage() {
             </div>
           </section>
 
-          {/* RIGHT: on-screen card */}
+          {/* RIGHT */}
           <section className="rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900/70 to-zinc-900/30 p-7 shadow-[0_20px_40px_rgba(0,0,0,0.6)]">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -167,17 +169,22 @@ export default function PresetsPage() {
               {/* Rules */}
               <div>
                 <h3 className="text-sm font-semibold text-zinc-200">Rules</h3>
+
                 <div className="mt-3 grid gap-3">
                   {(["Transfers", "Squad", "Finance", "Tactics"] as const).map((cat) => {
                     const items = scenario.rules.filter((r) => r.category === cat);
                     if (items.length === 0) return null;
 
                     return (
-                      <div key={cat} className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-4">
+                      <div
+                        key={cat}
+                        className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+                      >
                         <div className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-200">
                           <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
                           {cat}
                         </div>
+
                         <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-zinc-300">
                           {items.map((r) => (
                             <li key={`${cat}-${r.text}`}>{r.text}</li>
@@ -219,65 +226,24 @@ export default function PresetsPage() {
             ref={exportRef}
             className="w-[1080px] rounded-2xl border border-zinc-800 bg-zinc-950 p-8 text-zinc-100"
           >
-            <div className="flex items-start justify-between gap-6">
+            <div className="text-xs text-zinc-500">FM Companion • Preset: {scenario.presetName} • #{challengeId}</div>
+            <div className="mt-2 text-3xl font-bold">{scenario.club.name}</div>
+            <div className="text-sm text-zinc-400">{scenario.club.league}</div>
+
+            <div className="mt-6 grid gap-4">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/40 px-3 py-1 text-[11px] uppercase tracking-wider text-zinc-300">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                  Preset Challenge
-                </div>
-
-                <h2 className="mt-5 text-4xl font-bold leading-tight tracking-tight">
-                  {scenario.club.name}
-                </h2>
-                <p className="mt-1 text-sm text-zinc-400">{scenario.club.league}</p>
-
-                <div className="mt-3 text-xs text-zinc-500">
-                  Preset: <span className="text-zinc-300">{scenario.presetName}</span> • Challenge ID:{" "}
-                  <span className="text-zinc-300">#{challengeId}</span>
-                </div>
+                <div className="text-sm font-semibold text-zinc-200">Rules</div>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-zinc-300">
+                  {scenario.rules.map((r) => (
+                    <li key={`export-${r.category}-${r.text}`}>
+                      {r.category}: {r.text}
+                    </li>
+                  ))}
+                </ul>
               </div>
 
-              <div className="flex flex-wrap gap-2 justify-end">
-                {[difficulty, scenario.presetName].map((t) => (
-                  <span
-                    key={`export-${t}`}
-                    className="rounded-full border border-zinc-800 bg-zinc-900/40 px-2.5 py-1 text-[11px] text-zinc-300"
-                  >
-                    {t.toUpperCase()}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-6 grid gap-6">
               <div>
-                <h3 className="text-sm font-semibold text-zinc-200">Rules</h3>
-
-                <div className="mt-3 grid gap-3">
-                  {(["Transfers", "Squad", "Finance", "Tactics"] as const).map((cat) => {
-                    const items = scenario.rules.filter((r) => r.category === cat);
-                    if (items.length === 0) return null;
-
-                    return (
-                      <div key={`export-${cat}`} className="rounded-lg border border-zinc-800 bg-zinc-900/20 p-4">
-                        <div className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-200">
-                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                          {cat}
-                        </div>
-
-                        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-zinc-300">
-                          {items.map((r) => (
-                            <li key={`export-${cat}-${r.text}`}>{r.text}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-zinc-800 bg-zinc-900/20 p-4">
-                <h3 className="text-sm font-semibold text-zinc-200">Objectives</h3>
+                <div className="text-sm font-semibold text-zinc-200">Objectives</div>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-zinc-300">
                   {scenario.objectives.map((o) => (
                     <li key={`export-${o}`}>{o}</li>
@@ -286,13 +252,8 @@ export default function PresetsPage() {
               </div>
 
               <div className="rounded-lg border border-red-900/40 bg-red-950/20 p-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-zinc-200">Wildcard</h3>
-                  <span className="rounded-full border border-red-900/40 bg-red-950/30 px-2 py-1 text-[11px] text-red-200">
-                    CHAOS CLAUSE
-                  </span>
-                </div>
-                <p className="mt-2 text-sm text-zinc-200">{scenario.wildcard}</p>
+                <div className="text-sm font-semibold text-zinc-200">Wildcard • CHAOS CLAUSE</div>
+                <div className="mt-2 text-sm text-zinc-200">{scenario.wildcard}</div>
               </div>
 
               <div className="text-xs text-zinc-500">Built by TheBrizGaming • fm-companion.vercel.app</div>

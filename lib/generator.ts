@@ -22,6 +22,8 @@ export type RuleCategory = "Transfers" | "Squad" | "Finance" | "Tactics";
 export type CategorisedRule = {
   category: RuleCategory;
   text: string;
+  // if set, only one rule with the same group can exist on a card
+  exclusiveGroup?: string;
 };
 
 export type Scenario = {
@@ -35,9 +37,9 @@ function pickOne<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function pickManyUnique<T>(arr: T[], count: number): T[] {
+function pickManyUniqueStrings(arr: string[], count: number): string[] {
   const copy = [...arr];
-  const out: T[] = [];
+  const out: string[] = [];
   while (out.length < count && copy.length > 0) {
     const idx = Math.floor(Math.random() * copy.length);
     out.push(copy.splice(idx, 1)[0]);
@@ -51,34 +53,72 @@ function objectivesForHorizon(h: Horizon): string[] {
   return OBJECTIVES_LONG;
 }
 
+/**
+ * Adds lightweight constraint logic without rewriting all rule data into objects.
+ * We tag a few rules into exclusive groups so impossible combos never appear.
+ */
+function buildRulePool(): CategorisedRule[] {
+  const tactics = RULES_TACTICS.map((text) => {
+    const lower = text.toLowerCase();
+
+    // Exclusive mentality lock (prevents attacking-only + defensive-only together)
+    if (lower.includes("attacking mentality")) {
+      return { category: "Tactics" as const, text, exclusiveGroup: "mentality_lock" };
+    }
+    if (lower.includes("defensive mentality")) {
+      return { category: "Tactics" as const, text, exclusiveGroup: "mentality_lock" };
+    }
+
+    return { category: "Tactics" as const, text };
+  });
+
+  return [
+    ...RULES_TRANSFERS.map((text) => ({ category: "Transfers" as const, text })),
+    ...RULES_SQUAD.map((text) => ({ category: "Squad" as const, text })),
+    ...RULES_FINANCE.map((text) => ({ category: "Finance" as const, text })),
+    ...tactics,
+  ];
+}
+
+function pickRulesWithConstraints(pool: CategorisedRule[], count: number): CategorisedRule[] {
+  const copy = [...pool];
+  const picked: CategorisedRule[] = [];
+  const usedGroups = new Set<string>();
+
+  while (picked.length < count && copy.length > 0) {
+    const idx = Math.floor(Math.random() * copy.length);
+    const candidate = copy.splice(idx, 1)[0];
+
+    if (picked.some((r) => r.text === candidate.text)) continue;
+
+    if (candidate.exclusiveGroup) {
+      if (usedGroups.has(candidate.exclusiveGroup)) continue;
+      usedGroups.add(candidate.exclusiveGroup);
+    }
+
+    picked.push(candidate);
+  }
+
+  return picked;
+}
+
 export function generateScenario(input: {
   region: Region;
   difficulty: Difficulty;
   chaos: Chaos;
   horizon: Horizon;
 }): Scenario {
-  const clubs =
-    input.region === "any" ? CLUBS : CLUBS.filter((c) => c.region === input.region);
+  const clubs = input.region === "any" ? CLUBS : CLUBS.filter((c) => c.region === input.region);
   const club = pickOne(clubs.length ? clubs : CLUBS);
 
-  const rulesCount =
-    input.difficulty === "casual" ? 2 : input.difficulty === "hard" ? 3 : 4;
+  const rulesCount = input.difficulty === "casual" ? 2 : input.difficulty === "hard" ? 3 : 4;
 
-  // Build a categorised pool
-  const rulePool: CategorisedRule[] = [
-    ...RULES_TRANSFERS.map((text) => ({ category: "Transfers" as const, text })),
-    ...RULES_SQUAD.map((text) => ({ category: "Squad" as const, text })),
-    ...RULES_FINANCE.map((text) => ({ category: "Finance" as const, text })),
-    ...RULES_TACTICS.map((text) => ({ category: "Tactics" as const, text })),
-  ];
-
-  const rules = pickManyUnique(rulePool, rulesCount);
+  const rulePool = buildRulePool();
+  const rules = pickRulesWithConstraints(rulePool, rulesCount);
 
   const objectivePool = objectivesForHorizon(input.horizon);
-  const objectivesCount =
-    input.horizon === "1_season" ? 2 : input.horizon === "3_seasons" ? 3 : 4;
-
-  const objectives = pickManyUnique(objectivePool, objectivesCount);
+  const objectivesCount = input.horizon === "1_season" ? 2 : input.horizon === "3_seasons" ? 3 : 4;
+  const objectives = pickManyUniqueStrings(objectivePool, objectivesCount);
 
   const wildcardPool =
     input.chaos === "low"
